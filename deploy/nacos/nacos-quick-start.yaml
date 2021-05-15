@@ -34,6 +34,9 @@ data:
   mysql.port: "3306"
   mysql.user: "nacos"
   mysql.password: "nacos"
+  mysql.host: "mysql.default.svc.cluster.local"
+  spring.datasource.platform: "mysql"
+  mysql.para: "characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&&useSSL=false"
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -61,12 +64,12 @@ spec:
               topologyKey: "kubernetes.io/hostname"
       containers:
         - name: k8snacos
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           image: nacos/nacos-server:latest
-          resources:
-            requests:
-              memory: "2Gi"
-              cpu: "500m"
+          #resources:
+          #  requests:
+          #    memory: "2Gi"
+          #    cpu: "500m"
           ports:
             - containerPort: 8848
               name: client
@@ -84,6 +87,11 @@ spec:
                 configMapKeyRef:
                   name: nacos-cm
                   key: mysql.db.name
+            - name: MYSQL_SERVICE_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: nacos-cm
+                  key: mysql.host                  
             - name: MYSQL_SERVICE_PORT
               valueFrom:
                 configMapKeyRef:
@@ -99,6 +107,16 @@ spec:
                 configMapKeyRef:
                   name: nacos-cm
                   key: mysql.password
+            - name: SPRING_DATASOURCE_PLATFORM
+              valueFrom:
+                configMapKeyRef:
+                  name: nacos-cm
+                  key: spring.datasource.platform
+            - name: MYSQL_SERVICE_DB_PARAM
+              valueFrom:
+                configMapKeyRef:
+                  name: nacos-cm
+                  key: mysql.para
             - name: NACOS_SERVER_PORT
               value: "8848"
             - name: NACOS_APPLICATION_PORT
